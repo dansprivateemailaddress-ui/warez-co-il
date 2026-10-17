@@ -15,7 +15,7 @@ async function passwordMatches(password, stored) {
   return equal(new Uint8Array(actual), unhex(expected));
 }
 function secureHeaders(type = 'text/html; charset=utf-8', nonce = '') {
-  return { 'Content-Type': type, 'Cache-Control': 'no-store, private', 'X-Robots-Tag': 'noindex, nofollow', 'X-Content-Type-Options': 'nosniff', 'X-Frame-Options': 'DENY', 'Referrer-Policy': 'no-referrer', 'Content-Security-Policy': `default-src 'none'; script-src 'nonce-${nonce}'; style-src 'nonce-${nonce}'; connect-src 'self'; img-src 'self' data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'` };
+  return { 'Content-Type': type, 'Cache-Control': 'no-store, private', 'X-Robots-Tag': 'noindex, nofollow', 'X-Content-Type-Options': 'nosniff', 'X-Frame-Options': 'DENY', 'Referrer-Policy': 'same-origin', 'Content-Security-Policy': `default-src 'none'; script-src 'nonce-${nonce}'; style-src 'nonce-${nonce}'; connect-src 'self'; img-src 'self' data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'` };
 }
 function html(text, status = 200, extra = {}) { const nonce = hex(crypto.getRandomValues(new Uint8Array(16))); return new Response(text.replaceAll('{{NONCE}}', nonce), { status, headers: { ...secureHeaders(undefined, nonce), ...extra } }); }
 function json(data, status = 200) { return new Response(JSON.stringify(data), { status, headers: secureHeaders('application/json; charset=utf-8') }); }
