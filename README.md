@@ -64,3 +64,12 @@ Review vendor content monthly and whenever feedback identifies a change. The res
 Use `https://warez.co.il/` as the preferred origin. Canonicals, internal links and sitemap entries use extensionless tool/guide URLs and trailing slashes for directory indexes. Cloudflare Pages redirects `.html` and `index.html` forms automatically. The www-to-apex redirect is configured in the zone Ruleset phase `http_request_dynamic_redirect`. Preserve queries and paths when changing it.
 
 The language toggle is browser-local and is not a separate Hebrew URL. Do not add hreflang claims until complete, independently addressable translations exist. Structured data describes actual pages and editorial lists; do not add invented review ratings, partner relationships or product prices. Submit `https://warez.co.il/sitemap.xml` in the owner’s Google Search Console after ownership verification; no account or indexing submission is configured by this source change.
+
+
+## Private analytics
+
+Visit https://warez.co.il/analytics and use the owner password. Authentication is handled server-side with an eight-hour secure session. Credentials live in Cloudflare production secrets, never in this repository. The build attaches the first-party tracker to every public HTML page and bundles the Pages worker.
+
+Required production bindings: `ANALYTICS_DB` (D1), `ANALYTICS_SECRET` (random HMAC secret), and `ANALYTICS_PASSWORD_HASH` (hex salt + colon + PBKDF2 SHA-256, 100000 iterations, 32 bytes). Database schema is in analytics-schema.sql. Rotate the session secret to invalidate all logins.
+
+Traffic starts at installation. Daily visitor estimates are not identifiable people. Raw IPs and browser strings are not retained. Events expire after 90 days; cleanup runs opportunistically during collection. DNT, GPC and the privacy dialog opt-out stop tracking. Search Console query CSV imports are manual snapshots, separate from automatically tracked UTM terms and on-site searches.
