@@ -12,3 +12,6 @@ CREATE INDEX IF NOT EXISTS events_day ON events(day,kind);
 CREATE INDEX IF NOT EXISTS events_session ON events(session,kind);
 CREATE TABLE IF NOT EXISTS login_limits (key TEXT PRIMARY KEY, window INTEGER NOT NULL, attempts INTEGER NOT NULL);
 CREATE TABLE IF NOT EXISTS search_imports (id INTEGER PRIMARY KEY, imported_at INTEGER NOT NULL, label TEXT NOT NULL, rows_json TEXT NOT NULL);
+
+-- The initial credential remains in Cloudflare until the owner changes it.
+CREATE TABLE IF NOT EXISTS analytics_auth (id INTEGER PRIMARY KEY CHECK (id=1), password_hash TEXT NOT NULL, version TEXT NOT NULL);
