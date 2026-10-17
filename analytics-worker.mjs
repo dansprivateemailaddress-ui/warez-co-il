@@ -14,6 +14,16 @@ async function passwordMatches(password, stored) {
   const actual = await crypto.subtle.deriveBits({ name: 'PBKDF2', salt: unhex(salt), iterations: 100000, hash: 'SHA-256' }, key, 256);
   return equal(new Uint8Array(actual), unhex(expected));
 }
+async function passwordHash(password) {
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const key = await crypto.subtle.importKey('raw', encoder.encode(password), 'PBKDF2', false, ['deriveBits']);
+  const hash = await crypto.subtle.deriveBits({ name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' }, key, 256);
+  return hex(salt) + ':' + hex(hash);
+}
+async function credentials(env) {
+  return await env.ANALYTICS_DB.prepare('SELECT password_hash,version FROM analytics_auth WHERE id=1').first() || { password_hash:env.ANALYTICS_PASSWORD_HASH, version:'initial' };
+}
+function clearCookie() { return `${cookieName}=; Path=/analytics; Max-Age=0; HttpOnly; Secure; SameSite=Strict`; }
 function secureHeaders(type = 'text/html; charset=utf-8', nonce = '') {
   return { 'Content-Type': type, 'Cache-Control': 'no-store, private', 'X-Robots-Tag': 'noindex, nofollow', 'X-Content-Type-Options': 'nosniff', 'X-Frame-Options': 'DENY', 'Referrer-Policy': 'same-origin', 'Content-Security-Policy': `default-src 'none'; script-src 'nonce-${nonce}'; style-src 'nonce-${nonce}'; connect-src 'self'; img-src 'self' data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'` };
 }
@@ -21,13 +31,13 @@ function html(text, status = 200, extra = {}) { const nonce = hex(crypto.getRand
 function json(data, status = 200) { return new Response(JSON.stringify(data), { status, headers: secureHeaders('application/json; charset=utf-8') }); }
 function redirect(cookie = '') { return new Response(null, { status: 303, headers: { ...secureHeaders(), Location: '/analytics', ...(cookie ? { 'Set-Cookie': cookie } : {}) } }); }
 function loginPage(error = '') { return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Analytics Login | Warez.co.il</title><style nonce="{{NONCE}}">*{box-sizing:border-box}body{margin:0;background:#f5f5ef;color:#17281e;font:16px system-ui;display:grid;place-items:center;min-height:100vh}.card{width:min(430px,calc(100% - 36px));background:white;border:1px solid #dbe2d4;padding:40px;border-radius:18px;box-shadow:0 20px 70px #1730210b}.brand{font-weight:800;font-size:24px}h1{font-size:30px;margin-bottom:8px}p{line-height:1.6;color:#647064}label{display:block;margin:28px 0 8px;font-weight:600}input,button{font:inherit;width:100%;padding:14px;border-radius:8px}input{border:1px solid #a7b4a4}button{border:0;background:#1b3b29;color:white;font-weight:700;margin-top:18px;cursor:pointer}.error{color:#9d2828}small{color:#687467}</style></head><body><main class="card"><div class="brand">warez ✳ <small>ANALYTICS</small></div><h1>Welcome back.</h1><p>Your website, in numbers.<br>Enter your analytics password to continue.</p>${error ? `<p role="alert" class="error">${error}</p>` : ''}<form action="/analytics/login" method="post"><label for="password">Password</label><input id="password" name="password" type="password" autocomplete="current-password" maxlength="256" required autofocus><button type="submit">Open analytics →</button></form></main></body></html>`; }
-async function authenticated(request, env) {
+async function authenticated(request, env, credential) {
   const value = (request.headers.get('Cookie') || '').split(';').map(x => x.trim()).find(x => x.startsWith(cookieName + '='))?.slice(cookieName.length + 1);
   if (!value || value.length > 300) return false;
   const [nonce, expiry, signature] = value.split('.');
   const now = Math.floor(Date.now() / 1000), exp = Number(expiry);
   if (!/^[a-f0-9]{32}$/.test(nonce || '') || !Number.isInteger(exp) || exp < now || exp > now + sessionSeconds + 60 || !/^[a-f0-9]{64}$/.test(signature || '')) return false;
-  return equal(unhex(signature), unhex(await mac(env.ANALYTICS_SECRET, nonce + '.' + expiry)));
+  return equal(unhex(signature), unhex(await mac(env.ANALYTICS_SECRET, credential.version + ':' + nonce + '.' + expiry)));
 }
 function sameOrigin(request) { return request.headers.get('Origin') === origin; }
 async function smallBody(request, limit) {
@@ -96,20 +106,36 @@ export default {
       if (!env.ANALYTICS_DB || !env.ANALYTICS_SECRET || !env.ANALYTICS_PASSWORD_HASH) return json({ error: 'Analytics is being configured. Please try again shortly.' }, 503);
       if (path === '/_stats/collect' && request.method === 'POST') return await collect(request, env, ctx);
       if (path.startsWith('/_stats/')) return json({ error: 'Not found' }, 404);
+      const credential = await credentials(env);
       if (path === '/analytics/login' && request.method === 'POST') {
         if (!sameOrigin(request) || !request.headers.get('Content-Type')?.startsWith('application/x-www-form-urlencoded')) return json({ error: 'Invalid request' }, 403);
         const key = await mac(env.ANALYTICS_SECRET, 'login:' + (request.headers.get('CF-Connecting-IP') || 'unknown')), window = Math.floor(Date.now()/900000);
         const limit = await env.ANALYTICS_DB.prepare('INSERT INTO login_limits (key,window,attempts) VALUES (?,?,1) ON CONFLICT(key) DO UPDATE SET attempts=CASE WHEN window=excluded.window THEN attempts+1 ELSE 1 END,window=excluded.window RETURNING attempts').bind(key,window).first();
         if (limit.attempts > 10) return html(loginPage('Too many attempts. Please try again in 15 minutes.'),429,{'Retry-After':'900'});
         const data = new URLSearchParams(await smallBody(request, 1500));
-        if (!await passwordMatches(data.get('password') || '', env.ANALYTICS_PASSWORD_HASH)) return html(loginPage('That password did not match. Please try again.'),401);
-        const value = hex(crypto.getRandomValues(new Uint8Array(16))) + '.' + (Math.floor(Date.now()/1000) + sessionSeconds), token = value + '.' + await mac(env.ANALYTICS_SECRET,value);
+        if (!await passwordMatches(data.get('password') || '', credential.password_hash)) return html(loginPage('That password did not match. Please try again.'),401);
+        const value = hex(crypto.getRandomValues(new Uint8Array(16))) + '.' + (Math.floor(Date.now()/1000) + sessionSeconds), token = value + '.' + await mac(env.ANALYTICS_SECRET,credential.version + ':' + value);
         return redirect(`${cookieName}=${token}; Path=/analytics; Max-Age=${sessionSeconds}; HttpOnly; Secure; SameSite=Strict`);
       }
-      const auth = await authenticated(request,env);
+      const auth = await authenticated(request,env,credential);
       if (path === '/analytics' && request.method === 'GET') return html(auth ? DASHBOARD_HTML : loginPage());
       if (!auth) return json({ error: 'Please sign in' },401);
       if (path === '/analytics/logout' && request.method === 'POST') { if (!sameOrigin(request)) return json({ error: 'Invalid origin' },403); return redirect(`${cookieName}=; Path=/analytics; Max-Age=0; HttpOnly; Secure; SameSite=Strict`); }
+      if (path === '/analytics/password' && request.method === 'POST') {
+        if (!sameOrigin(request) || !request.headers.get('Content-Type')?.startsWith('application/json')) return json({ error:'Invalid request' },403);
+        const key = await mac(env.ANALYTICS_SECRET, 'password-change:' + (request.headers.get('CF-Connecting-IP') || 'unknown'));
+        const limit = await env.ANALYTICS_DB.prepare('INSERT INTO login_limits (key,window,attempts) VALUES (?,?,1) ON CONFLICT(key) DO UPDATE SET attempts=CASE WHEN window=excluded.window THEN attempts+1 ELSE 1 END,window=excluded.window RETURNING attempts').bind(key,Math.floor(Date.now()/900000)).first();
+        if (limit.attempts > 10) return json({ error:'Too many attempts. Please try again in 15 minutes.' },429);
+        const data = JSON.parse(await smallBody(request,4000));
+        if (typeof data.currentPassword !== 'string' || !await passwordMatches(data.currentPassword,credential.password_hash)) return json({ error:'The current password is incorrect.' },400);
+        if (typeof data.newPassword !== 'string' || data.newPassword.length < 12 || data.newPassword.length > 256) return json({ error:'Choose a password with 12 to 256 characters.' },400);
+        if (data.newPassword !== data.confirmPassword) return json({ error:'The new passwords do not match.' },400);
+        if (data.newPassword === data.currentPassword) return json({ error:'Choose a different password from your current one.' },400);
+        const hash = await passwordHash(data.newPassword), version = crypto.randomUUID();
+        const changed = await env.ANALYTICS_DB.prepare('INSERT INTO analytics_auth (id,password_hash,version) VALUES (1,?,?) ON CONFLICT(id) DO UPDATE SET password_hash=excluded.password_hash,version=excluded.version WHERE analytics_auth.version=? RETURNING version').bind(hash,version,credential.version).first();
+        if (!changed) return json({ error:'The password was changed in another session. Sign in again.' },409);
+        return new Response(JSON.stringify({ success:true }),{ headers:{ ...secureHeaders('application/json; charset=utf-8'),'Set-Cookie':clearCookie() } });
+      }
       if (path === '/analytics/api' && request.method === 'GET') return json(await report(request,env));
       if (path === '/analytics/import' && request.method === 'POST') {
         if (!sameOrigin(request)) return json({ error: 'Invalid origin' },403);
