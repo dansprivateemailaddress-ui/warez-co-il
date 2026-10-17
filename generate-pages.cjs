@@ -55,7 +55,7 @@ home = home.replace(/<!-- SEO-CATALOG-START -->.*?<!-- SEO-CATALOG-END -->/s, `<
 const homeSchema = pageSchema(catalogTitle, 'Discover and compare software for freelancers and small teams, with practical context for Israeli businesses.', '/', { mainEntity: listing });
 home = home.replace(/<!-- SEO-SCHEMA-START -->.*?<!-- SEO-SCHEMA-END -->/s, `<!-- SEO-SCHEMA-START --><script type="application/ld+json">${json(homeSchema)}</script><!-- SEO-SCHEMA-END -->`);
 const appVersion = require('node:crypto').createHash('sha256').update(app).digest('hex').slice(0,12);
-home = home.replace(/src="\/app\.js(?:\?v=[a-f0-9]+)?"/, 'src="/app.js?v=' + appVersion + '"');
+home = home.replace(/src="\/?app\.js(?:\?v=[a-f0-9]+)?"/, 'src="/app.js?v=' + appVersion + '"');
 fs.writeFileSync('dist/index.html', home);
 const urls = ['/', '/tools/', ...tools.map(toolPath), '/guides/', ...Object.values(guidePaths)];
 fs.writeFileSync('dist/sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls.map(path => `<url><loc>${origin}${path}</loc></url>`).join('')}</urlset>\n`);
