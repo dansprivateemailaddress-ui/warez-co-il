@@ -73,3 +73,7 @@ Visit https://warez.co.il/analytics and use the owner password. Authentication i
 Required production bindings: `ANALYTICS_DB` (D1), `ANALYTICS_SECRET` (random HMAC secret), and `ANALYTICS_PASSWORD_HASH` (hex salt + colon + PBKDF2 SHA-256, 100000 iterations, 32 bytes). Database schema is in analytics-schema.sql. Rotate the session secret to invalidate all logins.
 
 Traffic starts at installation. Daily visitor estimates are not identifiable people. Raw IPs and browser strings are not retained. Events expire after 90 days; cleanup runs opportunistically during collection. DNT, GPC and the privacy dialog opt-out stop tracking. Search Console query CSV imports are manual snapshots, separate from automatically tracked UTM terms and on-site searches.
+
+### Changing the owner password
+
+Inside analytics, choose **Settings → Change password**. Supply the current password and a matching new password of 12–256 characters. Only salted PBKDF2 hashes are saved in the private D1 `analytics_auth` table; the plaintext password is never logged or committed. A version change invalidates all existing analytics sessions. Password changes require authentication, same-origin requests, current-password verification and attempt limiting. The Cloudflare hash is a bootstrap credential only and stops working after the first owner password change. Back up the authentication row with the database and do not remove it during routine schema updates or redeploys.
