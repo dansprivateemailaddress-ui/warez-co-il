@@ -57,7 +57,23 @@ home = home.replace(/<!-- SEO-SCHEMA-START -->.*?<!-- SEO-SCHEMA-END -->/s, `<!-
 fs.writeFileSync('dist/index.html', home);
 const urls = ['/', '/tools/', ...tools.map(toolPath), '/guides/', ...Object.values(guidePaths)];
 fs.writeFileSync('dist/sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls.map(path => `<url><loc>${origin}${path}</loc></url>`).join('')}</urlset>\n`);
-fs.writeFileSync('dist/robots.txt', `User-agent: *\nAllow: /\nSitemap: ${origin}/sitemap.xml\n`);
+fs.writeFileSync('dist/robots.txt', `User-agent: *\nAllow: /\nDisallow: /analytics\nSitemap: ${origin}/sitemap.xml\n`);
 // A top-level 404 prevents Pages from returning the homepage with HTTP 200 for missing URLs.
 fs.writeFileSync('dist/404.html', '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Page Not Found | Warez.co.il</title><meta name="robots" content="noindex,follow"><link rel="stylesheet" href="/styles.css"></head><body><main class="wrap" style="padding-block:90px;max-width:760px"><p class="eyebrow">WAREZ / 404</p><h1>That page is not here.</h1><p>The address may have changed. Browse our software directory or return to the homepage.</p><p><a class="dark" href="/">Warez home ↗</a> <a href="/tools/">Browse all software tools</a></p></main></body></html>\n');
 console.log(`Generated ${urls.length} canonical pages, sitemap, robots.txt and 404 page.`);
+
+// Build the private analytics worker and attach the same first-party tracker to every public page.
+const trackerTag = '<script defer src="/_stats/tracker.js"></script>';
+function trackDirectory(dir) {
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const file = dir + '/' + entry.name;
+    if (entry.isDirectory()) trackDirectory(file);
+    else if (entry.name.endsWith('.html')) {
+      let content = fs.readFileSync(file, 'utf8').replaceAll(trackerTag, '');
+      fs.writeFileSync(file, content.replace('</head>', trackerTag + '</head>'));
+    }
+  }
+}
+trackDirectory('dist');
+fs.writeFileSync('dist/_worker.js', 'const TRACKER_JS=' + JSON.stringify(fs.readFileSync('analytics-tracker.js','utf8')) + ';\nconst DASHBOARD_HTML=' + JSON.stringify(fs.readFileSync('analytics-ui.html','utf8')) + ';\n' + fs.readFileSync('analytics-worker.mjs','utf8'));
+fs.writeFileSync('dist/_routes.json', JSON.stringify({ version:1, include:['/analytics','/analytics/*','/_stats/*'], exclude:[] }));
