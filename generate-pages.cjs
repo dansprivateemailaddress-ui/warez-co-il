@@ -3,6 +3,7 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const origin = 'https://warez.co.il';
 const gear = require('./desk-essentials.cjs');
+const styleVersion = require('node:crypto').createHash('sha256').update(fs.readFileSync('dist/styles.css')).digest('hex').slice(0,12);
 const context = { window: {} };
 vm.runInNewContext(fs.readFileSync('dist/data.js', 'utf8'), context);
 const tools = context.window.WAREZ_TOOLS;
@@ -15,7 +16,7 @@ const breadcrumb = (name, path, section = 'Software tools', sectionPath = '/tool
 const listing = { '@type': 'ItemList', numberOfItems: tools.length, itemListElement: tools.map((t, i) => ({ '@type': 'ListItem', position: i + 1, name: t.name, url: origin + toolPath(t) })) };
 const pageSchema = (name, description, path, extra = {}) => ({ '@context': 'https://schema.org', '@graph': [ { '@type': 'WebPage', '@id': origin + path, url: origin + path, name, description, inLanguage: 'en', isPartOf: { '@id': origin + '/#website' }, ...extra }, { '@type': 'WebSite', '@id': origin + '/#website', url: origin + '/', name: 'Warez.co.il', publisher } ] });
 const articleStyle = `<style>.tool-article{max-width:820px;padding-block:60px}.tool-article h1{font-size:clamp(32px,6vw,48px);line-height:1.15}.tool-article h2{font-size:24px;margin-block:30px 12px}.tool-article h3{margin-block:26px 10px}.tool-article p{color:#626b58;line-height:1.85;margin-block:15px}.tool-article ul{padding-left:20px;line-height:2}.tool-article a{text-decoration:underline;text-underline-offset:4px}.tool-article .dark{text-decoration:none;margin-top:20px}.tool-article .source-note{border-top:1px solid #dce0d1;padding-top:20px}.breadcrumbs{font-size:14px;margin-bottom:24px}</style>`;
-function shell(title, description, path, body, schema) { return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${metadata(title, description, path, schema)}<link rel="stylesheet" href="/styles.css"><link rel="icon" href="/icon.svg" type="image/svg+xml">${articleStyle}</head><body><header class="header"><a class="wordmark" href="/" aria-label="Warez home">warez<span>✳</span><small>CO.IL</small></a><nav aria-label="Main navigation"><a href="/#discover">Interactive directory</a><a href="/tools/">All tool notes</a><a href="/guides/">Field notes</a></nav></header><main class="wrap tool-article">${body}</main><footer class="wrap"><p class="source-note">© 2026 Warez.co.il · Independent editorial summaries. Product names belong to their owners. <a href="/">Home</a></p></footer></body></html>\n`; }
+function shell(title, description, path, body, schema) { return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${metadata(title, description, path, schema)}<link rel="stylesheet" href="/styles.css?v=${styleVersion}"><link rel="icon" href="/icon.svg" type="image/svg+xml">${articleStyle}</head><body><header class="header"><a class="wordmark" href="/" aria-label="Warez home">warez<span>✳</span><small>CO.IL</small></a><nav aria-label="Main navigation"><a href="/#discover">Interactive directory</a><a href="/tools/">All tool notes</a><a href="/guides/">Field notes</a></nav></header><main class="wrap tool-article">${body}</main><footer class="wrap"><p class="source-note">© 2026 Warez.co.il · Independent editorial summaries. Product names belong to their owners. <a href="/">Home</a></p></footer></body></html>\n`; }
 fs.mkdirSync('dist/tools', { recursive: true });
 for (const t of tools) {
   const path = toolPath(t), title = `${t.name}: Uses, Costs & Tradeoffs | Warez.co.il`;
@@ -57,6 +58,7 @@ fs.writeFileSync(guideIndex, fs.readFileSync(guideIndex, 'utf8').replace('</ul>'
 // This catalogue stays in source HTML even when JavaScript filters the interactive grid.
 let home = fs.readFileSync('dist/index.html', 'utf8');
 home = home.replace(/<!-- DESK-ESSENTIALS-START -->.*?<!-- DESK-ESSENTIALS-END -->/s, `<!-- DESK-ESSENTIALS-START -->${gear.home}<!-- DESK-ESSENTIALS-END -->`);
+home = home.replace(/href="\/?styles\.css(?:\?v=[a-f0-9]+)?"/, `href="/styles.css?v=${styleVersion}"`);
 const homeCatalog = `<details class="static-catalog"><summary>Browse all software tools by category</summary><p>Explore independent notes on ${tools.length} tools for freelancers and small teams.</p>${catalog}</details>`;
 home = home.replace(/<!-- SEO-CATALOG-START -->.*?<!-- SEO-CATALOG-END -->/s, `<!-- SEO-CATALOG-START -->${homeCatalog}<!-- SEO-CATALOG-END -->`);
 const homeSchema = pageSchema(catalogTitle, 'Discover and compare software for freelancers and small teams, with practical context for Israeli businesses.', '/', { mainEntity: listing });
