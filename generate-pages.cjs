@@ -2,6 +2,7 @@
 const fs = require('node:fs');
 const vm = require('node:vm');
 const origin = 'https://warez.co.il';
+const gear = require('./desk-essentials.cjs');
 const context = { window: {} };
 vm.runInNewContext(fs.readFileSync('dist/data.js', 'utf8'), context);
 const tools = context.window.WAREZ_TOOLS;
@@ -48,8 +49,14 @@ for (const [key, g] of Object.entries(guides)) {
 }
 const guideDescription = 'Practical software buying and workflow guides for freelancers, small businesses and Israeli teams.';
 fs.writeFileSync('dist/guides/index.html', shell('Software Buying & Workflow Guides | Warez.co.il', guideDescription, '/guides/', `<nav class="breadcrumbs" aria-label="Breadcrumb"><a href="/">Home</a> / Field notes</nav><h1>Choose software with context.</h1><p>${guideDescription}</p><ul>${Object.entries(guides).map(([key, g]) => `<li><a href="${guidePaths[key]}">${esc(g.title)}</a></li>`).join('')}</ul>`, pageSchema('Software Buying & Workflow Guides', guideDescription, '/guides/', { '@type': 'CollectionPage' })));
+const gearSchema = pageSchema(gear.title, gear.description, gear.guidePath);
+gearSchema['@graph'].push(breadcrumb(gear.title, gear.guidePath, 'Field notes', '/guides/'));
+fs.writeFileSync('dist' + gear.guidePath + '.html', shell(gear.title + ' | Warez.co.il', gear.description, gear.guidePath, `<nav class="breadcrumbs" aria-label="Breadcrumb"><a href="/">Home</a> / <a href="/guides/">Field notes</a> / Desk essentials</nav><div class="eyebrow">THE WAREZ EDIT / DESK ESSENTIALS</div><h1>${gear.title}</h1>${gear.body}`, gearSchema));
+const guideIndex = 'dist/guides/index.html';
+fs.writeFileSync(guideIndex, fs.readFileSync(guideIndex, 'utf8').replace('</ul>', `<li><a href="${gear.guidePath}">${gear.title}</a></li></ul>`));
 // This catalogue stays in source HTML even when JavaScript filters the interactive grid.
 let home = fs.readFileSync('dist/index.html', 'utf8');
+home = home.replace(/<!-- DESK-ESSENTIALS-START -->.*?<!-- DESK-ESSENTIALS-END -->/s, `<!-- DESK-ESSENTIALS-START -->${gear.home}<!-- DESK-ESSENTIALS-END -->`);
 const homeCatalog = `<details class="static-catalog"><summary>Browse all software tools by category</summary><p>Explore independent notes on ${tools.length} tools for freelancers and small teams.</p>${catalog}</details>`;
 home = home.replace(/<!-- SEO-CATALOG-START -->.*?<!-- SEO-CATALOG-END -->/s, `<!-- SEO-CATALOG-START -->${homeCatalog}<!-- SEO-CATALOG-END -->`);
 const homeSchema = pageSchema(catalogTitle, 'Discover and compare software for freelancers and small teams, with practical context for Israeli businesses.', '/', { mainEntity: listing });
@@ -57,7 +64,7 @@ home = home.replace(/<!-- SEO-SCHEMA-START -->.*?<!-- SEO-SCHEMA-END -->/s, `<!-
 const appVersion = require('node:crypto').createHash('sha256').update(app).digest('hex').slice(0,12);
 home = home.replace(/src="\/?app\.js(?:\?v=[a-f0-9]+)?"/, 'src="/app.js?v=' + appVersion + '"');
 fs.writeFileSync('dist/index.html', home);
-const urls = ['/', '/tools/', ...tools.map(toolPath), '/guides/', ...Object.values(guidePaths)];
+const urls = ['/', '/tools/', ...tools.map(toolPath), '/guides/', ...Object.values(guidePaths), gear.guidePath];
 fs.writeFileSync('dist/sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls.map(path => `<url><loc>${origin}${path}</loc></url>`).join('')}</urlset>\n`);
 fs.writeFileSync('dist/robots.txt', `User-agent: *\nAllow: /\nDisallow: /analytics\nSitemap: ${origin}/sitemap.xml\n`);
 // A top-level 404 prevents Pages from returning the homepage with HTTP 200 for missing URLs.
