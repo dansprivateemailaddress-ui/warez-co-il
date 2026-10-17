@@ -1,28 +1,28 @@
 # Warez.co.il
 
-A buildless software discovery website for independent businesses. No framework, package installation, database, or paid API is required. Serve `dist/` from any static host.
+A static software discovery website for independent businesses. No framework, package installation, database, or paid API is required. Serve `dist/` from any static host.
 
 ## Cloudflare Pages deployment
 
 - Repository: `dansprivateemailaddress-ui/warez-co-il`
 - Production branch: `main`
 - Framework preset: None
-- Build command: leave empty
+- Build command: `node generate-pages.cjs`
 - Build output directory: `dist`
 - Root directory: repository root
 
-Connect this repository in Cloudflare Pages to deploy future commits automatically. All static pages are checked in; no build or package installation is needed. Custom domain setup is a separate step after the first successful deployment.
+Cloudflare automatically deploys commits to `main` to https://warez.co.il. The www hostname redirects permanently to the HTTPS apex, preserving paths and query strings. The dependency-free Node build refreshes the tool pages, field notes, homepage catalogue, metadata, sitemap, robots.txt and 404 page. Generated files are build outputs: edit `dist/data.js`, the guide content in `dist/app.js`, or `generate-pages.cjs` rather than editing generated tool/guide HTML directly.
 
 ## Run
 
-From `dist/`, run `python -m http.server 8765` and open http://localhost:8765. ES scripts are ordinary deferred browser scripts.
+Run `node generate-pages.cjs` first. Then, from `dist/`, run `python -m http.server 8765` and open http://localhost:8765. ES scripts are ordinary deferred browser scripts.
 
 ## Edit
 
 - `dist/data.js`: 24 editorial product records and official source URLs.
 - `dist/config.js`: verified contact destinations, approved affiliate URLs, proposed sponsor price.
 - `dist/index.html`, `styles.css`, `app.js`: main interface and behavior.
-- `generate-pages.cjs`: regenerate crawlable product notes, catalog, sitemap and robots with `node generate-pages.cjs` after data changes.
+- `generate-pages.cjs`: generates crawlable pages, canonical URLs, structured data, sharing metadata, related tool links, sitemap and 404 page. Preserve the SEO marker comments in `dist/index.html`.
 
 Core interface and product summaries support English/Hebrew and RTL. Extended editorial notes, source citations, plan model labels, legal text and some illustrations remain in English. This is bilingual navigation and discovery, not a fully localized publication.
 
@@ -43,9 +43,9 @@ There is no active revenue integration at launch. No money can flow until the ow
 
 ## Existing hosting
 
-Back up the current document root. Upload CONTENTS of `dist/` into the hosting document root (`public_html`, `www`, or equivalent), preserving the `tools/` folder. This is a static site and needs no PHP rewrite rules or Node server. Keep HTTPS enabled. The private preview is independent of the domain and does not change DNS or existing hosting.
+Back up the current document root. Upload CONTENTS of `dist/` into the hosting document root (`public_html`, `www`, or equivalent), preserving the `tools/` folder. This is a static site and needs no PHP rewrite rules or Node server. Keep HTTPS enabled. The live domain is connected to the GitHub-backed Cloudflare Pages project.
 
-`sitemap.xml` and `robots.txt` target https://warez.co.il. Change them if the final canonical hostname differs. After deployment submit sitemap through the owner's search console. The static catalog and 24 vendor notes are crawlable; interactive filters/comparisons are browser-local. There are no fake structured reviews or ratings.
+`sitemap.xml` and `robots.txt` target https://warez.co.il. Change them if the final canonical hostname differs. After deployment submit sitemap through the owner's search console. The static catalogue, 24 vendor notes and three editorial guides are crawlable; interactive filters/comparisons are browser-local. There are no fake structured reviews or ratings.
 
 ## Launch and growth
 
@@ -58,3 +58,9 @@ Review vendor content monthly and whenever feedback identifies a change. The res
 ## Checks
 
 `node --check dist/app.js` and `node --check dist/data.js` validate syntax. Browser QA covers search, reset, comparison limit, saved persistence, language/RTL, mobile layout, sponsor form and local download. All styling uses CSS/vector typography; no external image downloads or copied competitor content are included. Google Fonts is optional and system-font fallbacks are provided.
+
+## SEO conventions
+
+Use `https://warez.co.il/` as the preferred origin. Canonicals, internal links and sitemap entries use extensionless tool/guide URLs and trailing slashes for directory indexes. Cloudflare Pages redirects `.html` and `index.html` forms automatically. The www-to-apex redirect is configured in the zone Ruleset phase `http_request_dynamic_redirect`. Preserve queries and paths when changing it.
+
+The language toggle is browser-local and is not a separate Hebrew URL. Do not add hreflang claims until complete, independently addressable translations exist. Structured data describes actual pages and editorial lists; do not add invented review ratings, partner relationships or product prices. Submit `https://warez.co.il/sitemap.xml` in the owner’s Google Search Console after ownership verification; no account or indexing submission is configured by this source change.
