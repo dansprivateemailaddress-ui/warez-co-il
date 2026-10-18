@@ -227,4 +227,43 @@ const cards=items=>`<div class="gear-grid">${items.map((p,i)=>`<article class="g
 const extraHome=collections.map(c=>`<section class="gear-section wrap gear-collection" id="${c.id}" aria-labelledby="${c.id}-title" lang="en" dir="ltr"><div class="section-top"><div><div class="eyebrow">THE WAREZ EDIT / WORK GEAR</div><h2 id="${c.id}-title">${esc(c.label)}</h2></div><a class="gear-guide" href="${c.guidePath}">Read the buying guide ↗</a></div><p class="gear-intro">${esc(c.intro)}</p>${disclosure}${cards(c.products)}${usNote}<a class="gear-guide" href="#gear-categories">Browse gear categories ↑</a></section>`).join('');
 const allSections=[{title,description,guidePath,body,products,id:'desk-essentials',label:'Desk essentials',date:'2026-10-17'},...collections.map(c=>({...c,date:'2026-10-18',body:`<p>${esc(c.description)}</p>${disclosure}<p>${esc(c.intro)}</p><h2>Start with the workflow</h2><p>${esc(c.context)}</p>${c.products.map((p,i)=>`<h2 id="${p.asin}">${i+1}. ${esc(p.name)}</h2>${photo(p)}<p>${esc(p.use)}</p><p>${esc(p.detail)}</p><p><strong>Before you buy:</strong> ${esc(p.check)}</p>${button(p)}`).join('')}<h2>Shopping on Amazon US</h2>${usNote}<h2>Continue building your setup</h2><ul>${collections.filter(x=>x.id!==c.id).map(x=>`<li><a href="${x.guidePath}">${esc(x.label)}</a></li>`).join('')}<li><a href="${guidePath}">Desk essentials for a small-business laptop</a></li></ul><p class="source-note">Warez editorial selection · 18 October 2026. Product listings and images were checked while preparing this guide. These are buying suggestions, not hands-on tests or promises of results. No prices, ratings, or review scores are reproduced here.</p><p><a href="/#${c.id}">Back to ${esc(c.label)}</a> · <a href="/#stacks">Browse starter software stacks</a></p>`}))];
 const categoryNav=`<nav class="gear-jump wrap" id="gear-categories" aria-label="Work gear categories"><p class="eyebrow">BUILD YOUR WORKSPACE</p><div>${allSections.map(c=>`<a href="#${c.id}">${esc(c.label)}</a>`).join('')}</div></nav>`;
-module.exports={products,home:categoryNav+home+extraHome,body,title,description,guidePath,sections:allSections};
+const digitalProducts=[
+  {
+    "name": "Building a Second Brain",
+    "author": "Tiago Forte",
+    "asin": "B09LVVN9L3",
+    "image": "https://m.media-amazon.com/images/I/71+IDmZU88L._SL1500_.jpg",
+    "alt": "Building a Second Brain ebook cover by Tiago Forte, with the subtitle about organizing your digital life",
+    "category": "ORGANIZE YOUR KNOWLEDGE",
+    "use": "A framework for capturing and organizing notes, ideas, and reference material so they can support real projects.",
+    "check": "A method book, not a note-taking app or software licence. Check the Kindle edition and supported reading devices.",
+    "related": "/tools/notion",
+    "relatedText": "Pair with your note-taking workflow"
+  },
+  {
+    "name": "Automate the Boring Stuff with Python · 3rd Edition",
+    "author": "Al Sweigart",
+    "asin": "B0CG8BSP2R",
+    "image": "https://m.media-amazon.com/images/I/71h2BKGo97L._SL1500_.jpg",
+    "alt": "Automate the Boring Stuff with Python third edition ebook cover by Al Sweigart, showing a robot mowing a lawn",
+    "category": "LEARN PRACTICAL AUTOMATION",
+    "use": "Learn Python through everyday tasks such as working with files, text, and spreadsheets. A practical next step when a repetitive workflow needs more than manual copying.",
+    "check": "A programming ebook, not an automation app. This edition has device restrictions; check Amazon’s supported-device list.",
+    "related": "/guides/automate-repetitive-work",
+    "relatedText": "Start with a simple automation plan"
+  },
+  {
+    "name": "The Mom Test",
+    "author": "Rob Fitzpatrick",
+    "asin": "B01H4G2J1U",
+    "image": "https://m.media-amazon.com/images/I/71HN4NPDhhL._SL1500_.jpg",
+    "alt": "The Mom Test ebook cover by Rob Fitzpatrick on a bright pink background with a small stick-figure illustration",
+    "category": "ASK BETTER CUSTOMER QUESTIONS",
+    "use": "A guide to customer conversations that help you learn about real needs before choosing what to build or sell.",
+    "check": "An English-language business ebook. Confirm the edition and Kindle reading options on Amazon before buying.",
+    "related": "/tools/tally",
+    "relatedText": "Explore a tool for gathering responses"
+  }
+];
+const digitalHome=`<section class="digital-picks" id="digital-books" aria-labelledby="digital-books-title" lang="en" dir="ltr"><div class="eyebrow">THE TOOLBOX / DIGITAL READING</div><h2 id="digital-books-title">Learn the skills behind your tools.</h2><p class="gear-intro">Three Kindle ebooks for organizing knowledge, automating repetitive work, and understanding customers. Choose the skill you want to build next.</p>${disclosure}<div class="gear-grid">${digitalProducts.map(p=>`<article class="gear-card"><div class="gear-category">${esc(p.category)}</div>${photo(p)}<span class="pill">Kindle ebook · English</span><h3>${esc(p.name)}</h3><p class="digital-author">By ${esc(p.author)}</p><p>${esc(p.use)}</p><p class="gear-check"><strong>Before you buy</strong><br>${esc(p.check)}</p><p><a class="gear-guide" href="${p.related}">${esc(p.relatedText)} ↗</a></p><a class="gear-link" href="${link(p)}" target="_blank" rel="sponsored noopener noreferrer" aria-label="View ${esc(p.name)} Kindle edition on Amazon (affiliate link)">View Kindle edition on Amazon ↗</a></article>`).join('')}</div><p class="gear-foot">Links open Amazon.com, the United States Amazon store. Kindle availability, device support, prices, and account-region eligibility are shown on Amazon. Selected for common small-business workflows.</p></section>`;
+module.exports={products,home:categoryNav+home+extraHome,body,title,description,guidePath,sections:allSections,digitalHome,digitalProducts};
