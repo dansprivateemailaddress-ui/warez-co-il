@@ -50,11 +50,16 @@ for (const [key, g] of Object.entries(guides)) {
 }
 const guideDescription = 'Practical software buying and workflow guides for freelancers, small businesses and Israeli teams.';
 fs.writeFileSync('dist/guides/index.html', shell('Software Buying & Workflow Guides | Warez.co.il', guideDescription, '/guides/', `<nav class="breadcrumbs" aria-label="Breadcrumb"><a href="/">Home</a> / Field notes</nav><h1>Choose software with context.</h1><p>${guideDescription}</p><ul>${Object.entries(guides).map(([key, g]) => `<li><a href="${guidePaths[key]}">${esc(g.title)}</a></li>`).join('')}</ul>`, pageSchema('Software Buying & Workflow Guides', guideDescription, '/guides/', { '@type': 'CollectionPage' })));
-const gearSchema = pageSchema(gear.title, gear.description, gear.guidePath);
-gearSchema['@graph'].push(breadcrumb(gear.title, gear.guidePath, 'Field notes', '/guides/'));
-fs.writeFileSync('dist' + gear.guidePath + '.html', shell(gear.title + ' | Warez.co.il', gear.description, gear.guidePath, `<nav class="breadcrumbs" aria-label="Breadcrumb"><a href="/">Home</a> / <a href="/guides/">Field notes</a> / Desk essentials</nav><div class="eyebrow">THE WAREZ EDIT / DESK ESSENTIALS</div><h1>${gear.title}</h1>${gear.body}`, gearSchema));
 const guideIndex = 'dist/guides/index.html';
-fs.writeFileSync(guideIndex, fs.readFileSync(guideIndex, 'utf8').replace('</ul>', `<li><a href="${gear.guidePath}">${gear.title}</a></li></ul>`));
+for (const g of gear.sections) {
+  const gearSchema = pageSchema(g.title, g.description, g.guidePath);
+  gearSchema['@graph'].push(breadcrumb(g.title, g.guidePath, 'Field notes', '/guides/'));
+  gearSchema['@graph'].push({ '@type':'Article', headline:g.title, description:g.description, author:publisher, publisher, datePublished:g.date, dateModified:g.date, image:g.products.map(p=>p.image), mainEntityOfPage:origin+g.guidePath });
+  gearSchema['@graph'].push({ '@type':'ItemList', name:g.title, numberOfItems:g.products.length, itemListElement:g.products.map((p,i)=>({'@type':'ListItem',position:i+1,name:p.name,url:origin+g.guidePath+'#'+p.asin})) });
+  const html = shell(g.title + ' | Warez.co.il', g.description, g.guidePath, `<nav class="breadcrumbs" aria-label="Breadcrumb"><a href="/">Home</a> / <a href="/guides/">Field notes</a> / ${esc(g.label)}</nav><div class="eyebrow">THE WAREZ EDIT / WORK GEAR</div><h1>${esc(g.title)}</h1>${g.body}`, gearSchema);
+  fs.writeFileSync('dist' + g.guidePath + '.html', html.replace('</head>', `<meta property="og:image" content="${esc(g.products[0].image)}"><meta name="twitter:image" content="${esc(g.products[0].image)}"></head>`));
+}
+fs.writeFileSync(guideIndex, fs.readFileSync(guideIndex, 'utf8').replace('</ul>', gear.sections.map(g=>`<li><a href="${g.guidePath}">${esc(g.title)}</a></li>`).join('')+'</ul>'));
 // This catalogue stays in source HTML even when JavaScript filters the interactive grid.
 let home = fs.readFileSync('dist/index.html', 'utf8');
 home = home.replace(/<!-- DESK-ESSENTIALS-START -->.*?<!-- DESK-ESSENTIALS-END -->/s, `<!-- DESK-ESSENTIALS-START -->${gear.home}<!-- DESK-ESSENTIALS-END -->`);
@@ -66,7 +71,7 @@ home = home.replace(/<!-- SEO-SCHEMA-START -->.*?<!-- SEO-SCHEMA-END -->/s, `<!-
 const appVersion = require('node:crypto').createHash('sha256').update(app).digest('hex').slice(0,12);
 home = home.replace(/src="\/?app\.js(?:\?v=[a-f0-9]+)?"/, 'src="/app.js?v=' + appVersion + '"');
 fs.writeFileSync('dist/index.html', home);
-const urls = ['/', '/tools/', ...tools.map(toolPath), '/guides/', ...Object.values(guidePaths), gear.guidePath];
+const urls = ['/', '/tools/', ...tools.map(toolPath), '/guides/', ...Object.values(guidePaths), ...gear.sections.map(g=>g.guidePath)];
 fs.writeFileSync('dist/sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls.map(path => `<url><loc>${origin}${path}</loc></url>`).join('')}</urlset>\n`);
 fs.writeFileSync('dist/robots.txt', `User-agent: *\nAllow: /\nDisallow: /analytics\nSitemap: ${origin}/sitemap.xml\n`);
 // A top-level 404 prevents Pages from returning the homepage with HTTP 200 for missing URLs.
