@@ -9,7 +9,8 @@ const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'
 const link=p=>`https://www.amazon.com/dp/${p.asin}?tag=warezcoil-20`;
 const button=p=>`<a class="gear-link" href="${link(p)}" target="_blank" rel="sponsored noopener noreferrer" aria-label="View ${esc(p.name)} on Amazon (affiliate link)"><span data-t="gearAmazon">View on Amazon ↗</span></a>`;
 const photo=p=>`<a class="gear-photo-link" href="${link(p)}" target="_blank" rel="sponsored noopener noreferrer"><img class="gear-photo" src="${esc(p.image)}" alt="${esc(p.alt)}" width="600" height="400" loading="lazy" decoding="async"></a>`;
-const disclosure='<p class="affiliate-note" lang="en" dir="ltr"><strong>Amazon affiliate links.</strong> As an Amazon Associate I earn from qualifying purchases. Warez may earn a commission when you buy through these links.</p>';
+// Owner requested no recurring affiliate disclosure blocks on 18 October 2026.
+const disclosure='';
 const guidePath='/guides/small-business-desk-essentials';
 const title='Three desk essentials for a small-business laptop';
 const description='A USB-C hub, compact keyboard, and portable SSD: practical options for freelancers, with compatibility checks before you buy.';
