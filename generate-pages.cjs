@@ -64,9 +64,12 @@ fs.writeFileSync(guideIndex, fs.readFileSync(guideIndex, 'utf8').replace('</ul>'
 let home = fs.readFileSync('dist/index.html', 'utf8');
 home = home.replace(/<!-- DESK-ESSENTIALS-START -->.*?<!-- DESK-ESSENTIALS-END -->/s, `<!-- DESK-ESSENTIALS-START -->${gear.home}<!-- DESK-ESSENTIALS-END -->`);
 home = home.replace(/href="\/?styles\.css(?:\?v=[a-f0-9]+)?"/, `href="/styles.css?v=${styleVersion}"`);
+if (!home.includes('<!-- DIGITAL-PICKS-START -->')) home = home.replace('<div class="category-tabs"', '<!-- DIGITAL-PICKS-START --><!-- DIGITAL-PICKS-END --><div class="category-tabs"');
+home = home.replace(/<!-- DIGITAL-PICKS-START -->.*?<!-- DIGITAL-PICKS-END -->/s, `<!-- DIGITAL-PICKS-START -->${gear.digitalHome}<!-- DIGITAL-PICKS-END -->`);
 const homeCatalog = `<details class="static-catalog"><summary>Browse all software tools by category</summary><p>Explore independent notes on ${tools.length} tools for freelancers and small teams.</p>${catalog}</details>`;
 home = home.replace(/<!-- SEO-CATALOG-START -->.*?<!-- SEO-CATALOG-END -->/s, `<!-- SEO-CATALOG-START -->${homeCatalog}<!-- SEO-CATALOG-END -->`);
 const homeSchema = pageSchema(catalogTitle, 'Discover and compare software for freelancers and small teams, with practical context for Israeli businesses.', '/', { mainEntity: listing });
+homeSchema['@graph'].push({ '@type':'ItemList', name:'Digital books for freelancers and small teams', numberOfItems:gear.digitalProducts.length, itemListElement:gear.digitalProducts.map((p,i)=>({'@type':'ListItem',position:i+1,item:{'@type':'Book',name:p.name,author:{'@type':'Person',name:p.author},bookFormat:'https://schema.org/EBook',inLanguage:'en',image:p.image,url:`https://www.amazon.com/dp/${p.asin}?tag=warezcoil-20`}})) });
 home = home.replace(/<!-- SEO-SCHEMA-START -->.*?<!-- SEO-SCHEMA-END -->/s, `<!-- SEO-SCHEMA-START --><script type="application/ld+json">${json(homeSchema)}</script><!-- SEO-SCHEMA-END -->`);
 const appVersion = require('node:crypto').createHash('sha256').update(app).digest('hex').slice(0,12);
 home = home.replace(/src="\/?app\.js(?:\?v=[a-f0-9]+)?"/, 'src="/app.js?v=' + appVersion + '"');
