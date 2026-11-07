@@ -7,7 +7,7 @@ const inherited = asin => existing.products.find(p=>p.asin===asin);
 const t7 = inherited('B09VLK9W3S');
 const hub = inherited('B0BQLLB61B');
 const keyboard = inherited('B0BT4DP7SC');
-const wd = { name:'WD My Passport Portable Hard Drive · 4TB',asin:'B07VTW2LPX',image:'https://cdn.cloudgenie.co.za/images/61988938.jpg',alt:'Black WD My Passport portable hard drive with a diagonal textured lower panel',category:'KEEP A SEPARATE COPY' };
+const wd = { name:'WD My Passport Portable Hard Drive · 4TB',asin:'B07VTW2LPX',image:'https://multimedia.bbycastatic.ca/multimedia/products/1500x1500/138/13837/13837099_5.jpg',alt:'Black WD My Passport portable hard drive with a diagonal textured lower panel',category:'KEEP A SEPARATE COPY' };
 const sandisk = {name:'SanDisk Ultra Dual Drive Go · 256GB',asin:'B084RQMTKL',image:'https://m.media-amazon.com/images/I/61+CbNr-PFL._AC_SL1500_.jpg',alt:'SanDisk Ultra Dual Drive Go flash drive with USB-C and USB-A connections and swivel cover',category:'HANDLE A SMALL HANDOFF'};
 const caseLogic = {name:'Case Logic QHDC-101 Drive Case',asin:'B003WUBIZQ',image:'https://m.media-amazon.com/images/I/71rCzogENNS._AC_SL1500_.jpg',alt:'Case Logic portable hard drive case with a zip closure and internal storage space',category:'GIVE THE DRIVE A HOME'};
 const scanner = {name:'Brother DS-640 Mobile Document Scanner',asin:'B083R36CY4',image:'https://m.media-amazon.com/images/I/516QQS0E4xL._AC_SL1500_.jpg',alt:'Compact white Brother DS-640 mobile document scanner with front paper feed slot',category:'GET PAPER INTO YOUR SYSTEM'};
