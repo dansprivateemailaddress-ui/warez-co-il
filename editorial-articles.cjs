@@ -1,0 +1,82 @@
+'use strict';
+const existing = require('./desk-essentials.cjs');
+const esc = s => String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const tag = 'warezcoil-20';
+const amazon = p => `https://www.amazon.com/dp/${p.asin}?tag=${tag}`;
+const inherited = asin => existing.products.find(p=>p.asin===asin);
+const t7 = inherited('B09VLK9W3S');
+const hub = inherited('B0BQLLB61B');
+const keyboard = inherited('B0BT4DP7SC');
+const wd = { name:'WD My Passport Portable Hard Drive · 4TB',asin:'B07VTW2LPX',image:'https://cdn.cloudgenie.co.za/images/61988938.jpg',alt:'Black WD My Passport portable hard drive with a diagonal textured lower panel',category:'KEEP A SEPARATE COPY' };
+const sandisk = {name:'SanDisk Ultra Dual Drive Go · 256GB',asin:'B084RQMTKL',image:'https://m.media-amazon.com/images/I/61+CbNr-PFL._AC_SL1500_.jpg',alt:'SanDisk Ultra Dual Drive Go flash drive with USB-C and USB-A connections and swivel cover',category:'HANDLE A SMALL HANDOFF'};
+const caseLogic = {name:'Case Logic QHDC-101 Drive Case',asin:'B003WUBIZQ',image:'https://m.media-amazon.com/images/I/71rCzogENNS._AC_SL1500_.jpg',alt:'Case Logic portable hard drive case with a zip closure and internal storage space',category:'GIVE THE DRIVE A HOME'};
+const scanner = {name:'Brother DS-640 Mobile Document Scanner',asin:'B083R36CY4',image:'https://m.media-amazon.com/images/I/516QQS0E4xL._AC_SL1500_.jpg',alt:'Compact white Brother DS-640 mobile document scanner with front paper feed slot',category:'GET PAPER INTO YOUR SYSTEM'};
+const dymo = {name:'DYMO LabelManager 160',asin:'B005X9VZ70',image:'https://cdn11.bigcommerce.com/s-9nntib/images/stencil/1500x1500/products/79146/297558/2142267_3__61831.1646720774.jpg?c=2&imbypass=on',alt:'Black DYMO LabelManager 160 handheld label maker with screen and QWERTY keyboard',category:'FIND THE ORIGINAL AGAIN'};
+const sections=[
+{
+ id:'freelancer-client-file-backup',label:'Client-file backup',guidePath:'/guides/freelancer-client-file-backup',date:'2026-11-07',
+ title:'A backup routine for freelance client files',
+ description:'Build a repeatable client-file backup routine with separate copies, a restore check and five practical storage accessories to consider.',
+ intro:[
+ 'The file was there yesterday. That is usually how the conversation starts, somewhere between a missing project folder and the uneasy discovery that the only copy lived on a laptop.',
+ 'A useful backup routine should be boring enough to repeat. For a freelancer, that likely means knowing which folder holds the current work, where a separate copy goes, and how to open that copy when the original machine is unavailable. More equipment may help. It cannot supply the habit.'
+ ],
+ contextTitle:'Start with a file you can restore',
+ context:[
+ 'Choose one finished project and copy it to a separate destination. Open a document from that copy, then check that its linked assets are present. A folder name alone tells you very little about whether tomorrow’s handoff will work.',
+ 'Cloud sync can keep devices aligned, but whether it can recover an earlier version depends on the service and your settings. Keep a separate recovery copy and test it periodically. CISA’s ransomware guidance recommends offline, encrypted backups with regular restoration checks; for a small business, an external drive that is safely ejected and disconnected between scheduled backups may form part of that approach.',
+ 'The five items below cover different jobs. A flash drive handles a handoff; a case carries equipment. Neither should be mistaken for an entire backup system.'
+ ],
+ products:[
+ {...t7,use:'A portable working drive for active client assets and exports when your laptop’s internal storage feels cramped.',detail:'The T7 Shield makes sense when you move substantial project folders between workspaces. Keep the working copy clearly named, then copy finished work to a separate destination on a schedule you can maintain. Moving a folder off the laptop does not create another copy. It merely changes where the only one lives.',check:'Choose the capacity you need. Check the cable and USB port, then confirm that the file system works with every computer that must read the drive.'},
+ {...wd,use:'A higher-capacity destination for a separate local copy of completed jobs and the files needed to reopen them.',detail:'A portable hard drive may suit a growing archive that does not need to travel every day. Give it a defined role, such as a dated backup of your client-work folder, rather than letting it become another unsorted desktop. When a backup finishes, verify it and eject the drive before disconnecting it. Store a further copy separately if a lost bag or damaged room could otherwise take everything.',check:'Confirm the exact 4TB model, supplied connector and operating-system requirements. Password protection needs a recovery plan; do not assume it replaces a separate backup.'},
+ {...sandisk,use:'A small transfer drive for moving a selected delivery folder between compatible USB-C and USB-A devices.',detail:'Sometimes the job is simply getting a PDF or a set of images onto another computer. A dual-connector drive can reduce the adapter hunt. Copy the delivery folder, open its files on the receiving device, and leave the master project in its usual home. For client information, use an appropriate protected transfer method rather than assuming that a pocket-sized drive is private by default.',check:'This is the 256GB listing. Confirm the device supports external USB storage and that the file format is readable at both ends.'},
+ {...hub,use:'A connection option when an external drive and your everyday USB accessories need the same limited set of laptop ports.',detail:'A backup routine tends to stall when connecting the drive means dismantling the desk. A hub can make that step less irritating, provided its ports match the devices you own. Keep the backup drive connected long enough for the job to finish. If a transfer fails, check the cable and power arrangement before blaming the storage device.',check:'Verify USB data compatibility and any power requirements. The hub does not back up files by itself, and its HDMI output depends on the laptop’s video support.'},
+ {...caseLogic,use:'A dedicated place for a portable drive and its cable, especially if the same equipment moves between home and a shared office.',detail:'A labelled case gives the drive somewhere to return to. That small detail matters when the alternative is leaving it under paperwork or borrowing its cable for another device. Check the fit rather than buying by appearance. A case may help with everyday handling, but it cannot protect the only copy of a project from every accident.',check:'Compare the drive and cable dimensions with the case’s usable interior. No drive is included; this is not a fire-rated storage product.'}
+ ],
+ closingTitle:'Make the routine easy to repeat',
+ closing:[
+ 'Write down the backup destination and the last successful check somewhere you will actually look. Then try restoring a small project without using the original folder. That rehearsal may reveal a missing font, an unlinked image or a password you have not recorded.',
+ 'Buy the piece that removes a real obstacle. The useful result is a recoverable project, not a desk with more storage boxes.'
+ ],
+ sources:[{label:'CISA ransomware guidance',url:'https://www.cisa.gov/stopransomware/ransomware-guide'},{label:'Samsung T7 Shield specifications',url:t7.source},{label:'WD My Passport product overview',url:'https://studio.westerndigital.com/content/dam/doc-library/en_us/assets/public/wd/product/external-storage/my_passport/my-passport-new/product-overview-wd-my-passport.pdf'}],
+ related:'/guides/paperless-desk-freelancers',relatedLabel:'A paperless desk that still handles real paperwork'
+},
+{
+ id:'paperless-desk-freelancers',label:'A practical paperless desk',guidePath:'/guides/paperless-desk-freelancers',date:'2026-11-07',
+ title:'A paperless desk that still handles real paperwork',
+ description:'Turn incoming paperwork into files you can find again. A practical scanning workflow with five related desk tools and checks before buying.',
+ intro:[
+ 'The pile keeps returning. Receipts arrive in a pocket, a signed form lands beside the keyboard, and the document you scanned last week has a name that means nothing today.',
+ 'Going paperless rarely starts with buying a scanner. It starts with deciding where a document goes after capture and what you will type when you need it again. A modest setup can help, particularly when it removes the awkward step that keeps getting postponed.'
+ ],
+ contextTitle:'Give each document a destination',
+ context:[
+ 'Try one real document before reorganizing the office. Capture it, check that the page is readable, and save it under a name such as 2026-11-07_supplier_invoice. The exact convention matters less than using it consistently.',
+ 'Put the file in the folder where you would expect to find it later. Search for it the next day. If that feels uncertain, the filing decision probably needs more attention than the scanner settings.',
+ 'Keep originals when your business or the document requires them. Scanning creates a usable copy; it does not establish that the paper can be discarded. For an Israeli team, test a Hebrew document as well as an English one before relying on an OCR workflow. Recognition quality depends on the software and the source page.'
+ ],
+ products:[
+ {...scanner,use:'A compact scanner for a light stream of loose receipts and business documents when phone capture has become a repeated interruption.',detail:'Brother’s DS-640 uses a USB connection to a computer, which may suit a desk where the laptop is already open. Feed a representative page through the scanner and inspect the result before building a large backlog around it. Cropped edges and faint text are easier to correct while the original is still in front of you. A compact mobile model makes less sense if you regularly need unattended batches or automatic scanning of both sides.',check:'Confirm current drivers for your operating system, supported document sizes and the connection on your computer. Do not assume automatic duplex scanning or Wi-Fi.'},
+ {...keyboard,use:'A compact keyboard for giving scanned documents meaningful names and keeping a small laptop desk usable.',detail:'Renaming files sounds minor until the queue reaches twenty scans. A separate keyboard may make that repeated step more comfortable, especially when the laptop sits on a stand. The K380s leaves room for paperwork beside it. If invoice entry dominates your day, though, the missing number pad may be a reason to choose a different layout.',check:'Check Bluetooth support and the printed keyboard layout. Hebrew typing support in your operating system does not mean this particular listing has Hebrew key legends.'},
+ {...hub,use:'A way to connect a scanner and other USB equipment to a compatible laptop without repeatedly swapping plugs.',detail:'Look at the scanner cable before choosing the hub. Count the data connections you need, then leave the arrangement simple enough that you can explain it to someone else at the desk. A charging-only connection will not move a scanned file. If an accessory behaves inconsistently through a hub, test it directly on the computer to narrow down the problem.',check:'Confirm the exact USB connections and device power needs. Match the hub to your laptop; its video features are separate from the scanning workflow.'},
+ {...dymo,use:'A handheld label maker for the folders and storage boxes that still hold originals after a digital copy is filed.',detail:'Some paper stays. A readable label can connect the physical folder to the name used in your digital archive, so the two systems stop competing. Keep labels short enough to recognize at a glance. This is a physical label maker, not a document scanner or an online filing service; check its supported characters before expecting it to print the language you use.',check:'The LabelManager 160 uses compatible D1 label tapes. Confirm the tape width, power supply and what the selected package includes; do not assume extra tapes are bundled.'},
+ {...t7,use:'A separate local copy of your document archive when the primary files are kept on the computer.',detail:'An archive is only useful while you can still open it. Copy the finished document folders to a separate drive on a schedule, then check a few files from the copy itself. Keep the original folder structure intact so a future search behaves as expected. A drive used as the sole home for scans is storage rather than a second copy.',check:'Confirm capacity, file-system compatibility and access controls for business documents. Keep another independent copy and test restoration.'}
+ ],
+ closingTitle:'Reduce the queue, then improve the setup',
+ closing:[
+ 'A small daily intake may work better than a monthly scanning marathon. Finish the cycle while the document is fresh: capture it, save it where it belongs, and put any retained original in its labelled folder.',
+ 'The software can come next. Explore <a href="/tools/notion">Notion</a> for a shared document index or <a href="/tools/obsidian">Obsidian</a> for a local notes workflow, but check access and attachments before moving client records. Neither removes the need for a clear filing decision.'
+ ],
+ sources:[{label:'Brother DS-640 product information',url:'https://www.brother-usa.com/p/portable-scanners/RDS640?Condition=New&pid=DS640'},{label:'DYMO LabelManager 160 specifications',url:'https://www.dymo.com/label-makers-printers/labelmanager-label-makers/dymo-labelmanager-160-portable-label-maker/SP_95477.html'},{label:'Logitech Pebble Keys 2 product information',url:keyboard.source}],
+ related:'/guides/freelancer-client-file-backup',relatedLabel:'A backup routine for freelance client files'
+}
+];
+const photo=p=>`<a class="gear-photo-link" href="${amazon(p)}" target="_blank" rel="sponsored noopener noreferrer" aria-label="View ${esc(p.name)} on Amazon (affiliate link)"><img class="gear-photo" src="${esc(p.image)}" alt="${esc(p.alt)}" width="600" height="400" loading="lazy" decoding="async"></a>`;
+const button=p=>`<a class="gear-link" href="${amazon(p)}" target="_blank" rel="sponsored noopener noreferrer" aria-label="View ${esc(p.name)} on Amazon (affiliate link)">View on Amazon ↗</a>`;
+const paras=items=>items.map(p=>`<p>${p.includes('<a href=')?p:esc(p)}</p>`).join('');
+for(const a of sections){
+ a.body=`${paras(a.intro)}<p class="gear-foot">Amazon affiliate links. As an Amazon Associate, Warez.co.il earns from qualifying purchases.</p><h2>${esc(a.contextTitle)}</h2>${paras(a.context)}${a.products.map(p=>`<section aria-labelledby="heading-${p.asin}"><h2 id="${p.asin}"><span id="heading-${p.asin}">${esc(p.name)}</span></h2>${photo(p)}<p>${esc(p.use)}</p><p>${esc(p.detail)}</p><p class="gear-check"><strong>Before you buy:</strong> ${esc(p.check)}</p>${button(p)}</section>`).join('')}<h2>${esc(a.closingTitle)}</h2>${paras(a.closing)}<h2>Shopping on Amazon US</h2><p>Links open Amazon.com (US). Check the seller and delivery options for your address, including any import charges. Current prices and availability are shown on Amazon.</p><p class="source-note">Warez editorial selection · 7 November 2026. These are researched buying suggestions, not hands-on reviews. Product descriptions and packages may change. No prices or review ratings are reproduced.</p><p>Sources: ${a.sources.map(s=>`<a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${esc(s.label)}</a>`).join(' · ')}. Product links were checked while preparing this article.</p><p><a href="${a.related}">${esc(a.relatedLabel)}</a> · <a href="/guides/">More field notes</a></p>`;
+}
+const home=`<section class="notes wrap" id="latest-field-notes" lang="en" dir="ltr"><div class="section-top"><div><div class="eyebrow">THE WAREZ EDIT / NEW FIELD NOTES</div><h2>Work that holds together.</h2></div><a class="gear-guide" href="/guides/">All field notes ↗</a></div><div class="notes-grid">${sections.map((a,i)=>`<a class="note" href="${a.guidePath}"><div class="note-visual ${i?'visual-auto':'visual-free'}"><span>${i?'PAPER':'SAVE'}</span><i>${i?'↗':'↻'}</i><span>${i?'FILES':'RESTORE'}</span></div><div class="note-meta">WORKFLOW / 7 NOVEMBER 2026</div><h3>${esc(a.title)}</h3><span>Read field note ↗</span></a>`).join('')}</div></section>`;
+module.exports={sections,home};
