@@ -3,6 +3,8 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const origin = 'https://warez.co.il';
 const gear = require('./desk-essentials.cjs');
+const editorial = require('./editorial-articles.cjs');
+gear.sections.push(...editorial.sections);
 const styleVersion = require('node:crypto').createHash('sha256').update(fs.readFileSync('dist/styles.css')).digest('hex').slice(0,12);
 const context = { window: {} };
 vm.runInNewContext(fs.readFileSync('dist/data.js', 'utf8'), context);
@@ -87,6 +89,8 @@ fs.writeFileSync('dist/about.html', shell(aboutTitle, aboutDescription, '/about'
 
 // This catalogue stays in source HTML even when JavaScript filters the interactive grid.
 let home = fs.readFileSync('dist/index.html', 'utf8');
+if (!home.includes('<!-- NEW-ARTICLES-START -->')) home = home.replace('<section class="notes wrap" id="fieldnotes">', '<!-- NEW-ARTICLES-START --><!-- NEW-ARTICLES-END --><section class="notes wrap" id="fieldnotes">');
+home = home.replace(/<!-- NEW-ARTICLES-START -->.*?<!-- NEW-ARTICLES-END -->/s, `<!-- NEW-ARTICLES-START -->${editorial.home}<!-- NEW-ARTICLES-END -->`);
 home = home.replace(/<!-- DESK-ESSENTIALS-START -->.*?<!-- DESK-ESSENTIALS-END -->/s, `<!-- DESK-ESSENTIALS-START -->${gear.home}<!-- DESK-ESSENTIALS-END -->`);
 home = home.replace(/href="\/?styles\.css(?:\?v=[a-f0-9]+)?"/, `href="/styles.css?v=${styleVersion}"`);
 if (!home.includes('<!-- DIGITAL-PICKS-START -->')) home = home.replace('<div class="category-tabs"', '<!-- DIGITAL-PICKS-START --><!-- DIGITAL-PICKS-END --><div class="category-tabs"');
@@ -124,3 +128,4 @@ function trackDirectory(dir) {
 trackDirectory('dist');
 fs.writeFileSync('dist/_worker.js', 'const TRACKER_JS=' + JSON.stringify(fs.readFileSync('analytics-tracker.js','utf8')) + ';\nconst DASHBOARD_HTML=' + JSON.stringify(fs.readFileSync('analytics-ui.html','utf8')) + ';\n' + fs.readFileSync('analytics-worker.mjs','utf8'));
 fs.writeFileSync('dist/_routes.json', JSON.stringify({ version:1, include:['/analytics','/analytics/*','/_stats/*'], exclude:[] }));
+
