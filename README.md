@@ -68,6 +68,12 @@ The language toggle is browser-local and is not a separate Hebrew URL. Do not ad
 
 ## Private analytics
 
+Traffic-source rows expand to show clickable referring pages, sessions, medium and campaign. New events retain the referring origin and path when the browser supplies them; URL credentials, query strings, fragments and sensitive path values are removed. Historical events that stored only a hostname remain labeled as domain-only. An absent referrer is reported as Direct / unknown, not asserted to be a typed or bookmarked visit. Tag shared links with `utm_source`, `utm_medium` and `utm_campaign` to measure traffic from apps or sites that withhold referrers.
+
+The tracker retains the incoming attribution during internal navigation, starts a new session after thirty minutes of inactivity or a changed incoming campaign, and recognizes common Google/Bing/Facebook click markers without collecting their values. Tracker URLs are content-versioned during the build. No database migration or invented historical attribution is required.
+
+Analytics checks: `node generate-pages.cjs`, `node analytics-test.mjs`, and `node analytics-tracker-test.mjs`.
+
 Visit https://warez.co.il/analytics and use the owner password. Authentication is handled server-side with an eight-hour secure session. Credentials live in Cloudflare production secrets, never in this repository. The build attaches the first-party tracker to every public HTML page and bundles the Pages worker.
 
 Required production bindings: `ANALYTICS_DB` (D1), `ANALYTICS_SECRET` (random HMAC secret), and `ANALYTICS_PASSWORD_HASH` (hex salt + colon + PBKDF2 SHA-256, 100000 iterations, 32 bytes). Database schema is in analytics-schema.sql. Rotate the session secret to invalidate all logins.
