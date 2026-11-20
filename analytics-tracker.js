@@ -3,17 +3,26 @@
   if (!['warez.co.il', 'www.warez.co.il'].includes(location.hostname) || location.pathname.startsWith('/analytics') || navigator.doNotTrack === '1' || navigator.globalPrivacyControl) return;
   try { if (localStorage.getItem('warez-analytics-optout') === '1') return; } catch {}
   let session;
-  try { session = sessionStorage.getItem('warez-visit'); if (!session) { session = crypto.randomUUID(); sessionStorage.setItem('warez-visit', session); } } catch { session = crypto.randomUUID(); }
   const page = location.pathname, params = new URLSearchParams(location.search);
   let referrer = document.referrer;
   try { referrer = referrer ? new URL(referrer).origin + new URL(referrer).pathname : ''; } catch { referrer = ''; }
   let tags = Object.fromEntries(['source', 'medium', 'campaign', 'term'].map(k => [k, (params.get('utm_' + k) || '').slice(0, 100)]));
+  // Click identifiers indicate a source; their values are never stored or transmitted.
+  if(!tags.source && ['gclid','dclid','gbraid','wbraid'].some(k=>params.has(k))) tags={...tags,source:'Google',medium:tags.medium||'cpc'};
+  else if(!tags.source && params.has('msclkid')) tags={...tags,source:'Bing',medium:tags.medium||'cpc'};
+  else if(!tags.source && params.has('fbclid')) tags={...tags,source:'Facebook',medium:tags.medium||'social'};
   try {
-    const previous = JSON.parse(sessionStorage.getItem('warez-attribution') || 'null');
+    const now=Date.now(), previous = JSON.parse(sessionStorage.getItem('warez-attribution') || 'null');
     const external = referrer && !['warez.co.il','www.warez.co.il'].includes(new URL(referrer).hostname);
-    if (tags.source || external || !previous) sessionStorage.setItem('warez-attribution', JSON.stringify({ referrer, tags }));
-    else { referrer = previous.referrer; tags = previous.tags; }
-  } catch {}
+    const tagged=Object.values(tags).some(Boolean);
+    const changed=!!previous && (tagged && Object.keys(tags).some(k=>tags[k]!==previous.tags?.[k]) || external && referrer!==previous.referrer);
+    const fresh=!previous||previous.version!==2||now-previous.last>30*60*1000||changed;
+    session=!fresh?sessionStorage.getItem('warez-visit'):null;
+    if(!session)session=crypto.randomUUID();
+    sessionStorage.setItem('warez-visit',session);
+    if(!fresh){referrer=previous.referrer;tags=previous.tags;}
+    sessionStorage.setItem('warez-attribution',JSON.stringify({version:2,referrer,tags,last:now}));
+  } catch { session=crypto.randomUUID(); }
   function send(kind, extra = {}) {
     try {
       if (localStorage.getItem('warez-analytics-optout') === '1') return;

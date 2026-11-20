@@ -50,6 +50,21 @@ async function smallBody(request, limit) {
 }
 function clean(value, limit = 100) { const s = String(value || '').replace(/[\x00-\x1f<>]/g, '').trim().slice(0, limit); return /[\w.+-]+@[\w.-]+\.[a-z]{2,}|\b\+?\d[\d ()-]{8,}\d\b/i.test(s) ? '[redacted]' : s; }
 function publicPath(value) { try { const u = new URL(String(value), origin); let p = u.pathname.slice(0, 200); if (/^\/(analytics|_stats)(\/|$)/i.test(p)) return ''; if (p.includes('@')) return '/[redacted]'; return p.replace(/\/[a-f0-9]{24,}(?=\/|$)/gi, '/[redacted]'); } catch { return ''; } }
+function referringPage(value) {
+  try {
+    const u = new URL(String(value));
+    if (!['https:','http:'].includes(u.protocol) || ['warez.co.il','www.warez.co.il'].includes(u.hostname)) return { url:'', host:'' };
+    // Retain the page, but never collect query strings, fragments or URL credentials.
+    const path = clean(u.pathname.replace(/\/[a-f0-9]{24,}(?=\/|$)/gi,'/[redacted]'),600);
+    return { url:u.origin+(path==='[redacted]'?'/[redacted]':path), host:u.hostname };
+  } catch { return { url:'', host:'' }; }
+}
+function searchEngine(host) {
+  if (/(^|\.)google\.(com|[a-z]{2}|co\.[a-z]{2}|com\.[a-z]{2})$/i.test(host)) return 'Google';
+  if (host==='bing.com'||host.endsWith('.bing.com')) return 'Bing';
+  if (host==='duckduckgo.com'||host.endsWith('.duckduckgo.com')) return 'DuckDuckGo';
+  return '';
+}
 function client(ua) {
   const device = /ipad|tablet/i.test(ua) ? 'Tablet' : /mobile|iphone|android/i.test(ua) ? 'Mobile' : 'Desktop';
   const browser = /Edg\//.test(ua) ? 'Edge' : /OPR\//.test(ua) ? 'Opera' : /Firefox\//.test(ua) ? 'Firefox' : /Chrome\//.test(ua) ? 'Chrome' : /Safari\//.test(ua) ? 'Safari' : 'Other';
@@ -68,9 +83,9 @@ async function collect(request, env, ctx) {
   const rate = await env.ANALYTICS_DB.prepare('INSERT INTO login_limits (key,window,attempts) VALUES (?,?,1) ON CONFLICT(key) DO UPDATE SET attempts=CASE WHEN window=excluded.window THEN attempts+1 ELSE 1 END,window=excluded.window RETURNING attempts').bind('collect:' + visitor, Math.floor(ts / 60)).first();
   if (rate.attempts > 120) return new Response(null, { status: 429 });
   const session = (await mac(env.ANALYTICS_SECRET, 'session:' + event.session)).slice(0, 32);
-  let referrer = ''; try { const ref = new URL(event.referrer); if (ref.protocol === 'https:' || ref.protocol === 'http:') { if (!['warez.co.il','www.warez.co.il'].includes(ref.hostname)) referrer = ref.hostname; } } catch {}
-  const source = clean(event.source) || (/google\./i.test(referrer) ? 'Google' : /bing\./i.test(referrer) ? 'Bing' : /duckduckgo\./i.test(referrer) ? 'DuckDuckGo' : referrer || 'Direct / unknown');
-  const medium = clean(event.medium) || (/google\.|bing\.|duckduckgo\./i.test(referrer) ? 'organic' : referrer ? 'referral' : 'direct');
+  const {url:referrer,host:referrerHost}=referringPage(event.referrer), engine=searchEngine(referrerHost);
+  const source = clean(event.source) || engine || referrerHost || 'Direct / unknown';
+  const medium = clean(event.medium) || (engine ? 'organic' : referrerHost ? 'referral' : 'direct');
   const info = client(ua), seconds = event.kind === 'engagement' ? Math.max(0, Math.min(1800, Math.floor(Number(event.seconds) || 0))) : 0;
   const statement = env.ANALYTICS_DB.prepare('INSERT OR IGNORE INTO events (id,ts,day,visitor,session,kind,path,referrer,source,medium,campaign,term,country,city,device,browser,os,seconds,destination) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)').bind(event.id,ts,day,visitor,session,event.kind,path,referrer,source,medium,clean(event.campaign),clean(event.term),clean(request.cf?.country || 'Unknown'),clean(request.cf?.city || ''),info.device,info.browser,info.os,seconds,clean(event.destination));
   ctx.waitUntil((async () => { await statement.run(); if (crypto.getRandomValues(new Uint8Array(1))[0] === 0) await env.ANALYTICS_DB.batch([env.ANALYTICS_DB.prepare('DELETE FROM events WHERE ts < ?').bind(ts - 90 * 86400), env.ANALYTICS_DB.prepare("DELETE FROM login_limits WHERE (key LIKE 'collect:%' AND window < ?) OR (key NOT LIKE 'collect:%' AND window < ?)").bind(Math.floor(ts / 60) - 60, Math.floor(ts / 900) - 4)]); })().catch(() => console.error('analytics_write_failed')));
@@ -79,7 +94,7 @@ async function collect(request, env, ctx) {
 async function report(request, env) {
   const days = Math.max(1, Math.min(90, parseInt(new URL(request.url).searchParams.get('days') || '7', 10) || 7));
   const since = Math.floor(Date.now() / 86400000) * 86400 - (days - 1) * 86400;
-  const top = (field, extra = '') => env.ANALYTICS_DB.prepare(`SELECT ${field} AS name, COUNT(*) AS views, COUNT(DISTINCT visitor) AS visitors FROM events WHERE ts >= ? AND kind='view' ${extra} GROUP BY ${field} ORDER BY views DESC LIMIT 50`).bind(since);
+  const top = (field, extra = '') => env.ANALYTICS_DB.prepare(`SELECT ${field} AS name, COUNT(*) AS views, COUNT(DISTINCT visitor) AS visitors, COUNT(DISTINCT session) AS sessions FROM events WHERE ts >= ? AND kind='view' ${extra} GROUP BY ${field} ORDER BY views DESC LIMIT 50`).bind(since);
   const statements = [
     env.ANALYTICS_DB.prepare("SELECT COUNT(*) AS pageviews,COUNT(DISTINCT visitor) AS visitors,COUNT(DISTINCT session) AS sessions FROM events WHERE ts>=? AND kind='view'").bind(since),
     env.ANALYTICS_DB.prepare("SELECT day,COUNT(*) AS views,COUNT(DISTINCT visitor) AS visitors FROM events WHERE ts>=? AND kind='view' GROUP BY day ORDER BY day").bind(since),
@@ -87,14 +102,16 @@ async function report(request, env) {
     env.ANALYTICS_DB.prepare("SELECT term AS name,COUNT(*) AS searches FROM events WHERE ts>=? AND kind='search' AND term<>'' GROUP BY term ORDER BY searches DESC LIMIT 50").bind(since),
     top('term', "AND term<>''"),
     env.ANALYTICS_DB.prepare("SELECT destination AS name,COUNT(*) AS clicks FROM events WHERE ts>=? AND kind='outbound' AND destination<>'' GROUP BY destination ORDER BY clicks DESC LIMIT 50").bind(since),
-    env.ANALYTICS_DB.prepare("SELECT path,source,country,city,device,ts FROM events WHERE ts>=? AND kind='view' ORDER BY ts DESC LIMIT 30").bind(since),
+    env.ANALYTICS_DB.prepare("SELECT path,source,medium,campaign,referrer,country,city,device,ts FROM events WHERE ts>=? AND kind='view' ORDER BY ts DESC LIMIT 30").bind(since),
     env.ANALYTICS_DB.prepare('SELECT COUNT(DISTINCT visitor) AS visitors FROM events WHERE ts>=?').bind(Math.floor(Date.now()/1000)-300),
     env.ANALYTICS_DB.prepare("SELECT COUNT(*) AS bounced FROM (SELECT session FROM events WHERE ts>=? AND kind='view' GROUP BY session HAVING COUNT(*)=1)").bind(since),
     env.ANALYTICS_DB.prepare("SELECT COALESCE(SUM(seconds),0) AS seconds FROM events WHERE ts>=? AND kind='engagement'").bind(since),
-    env.ANALYTICS_DB.prepare('SELECT imported_at,label,rows_json FROM search_imports WHERE id=1')
+    env.ANALYTICS_DB.prepare('SELECT imported_at,label,rows_json FROM search_imports WHERE id=1'),
+    env.ANALYTICS_DB.prepare("SELECT source,referrer,medium,campaign,COUNT(*) AS views,COUNT(DISTINCT visitor) AS visitors,COUNT(DISTINCT session) AS sessions FROM events WHERE ts>=? AND kind='view' GROUP BY source,referrer,medium,campaign ORDER BY views DESC LIMIT 500").bind(since),
+    env.ANALYTICS_DB.prepare("SELECT COUNT(*) AS total,SUM(CASE WHEN referrer<>'' THEN 1 ELSE 0 END) AS withReferrer,SUM(CASE WHEN source='Direct / unknown' AND referrer='' THEN 1 ELSE 0 END) AS unknown FROM events WHERE ts>=? AND kind='view'").bind(since)
   ];
   const results = await env.ANALYTICS_DB.batch(statements), rows = i => results[i].results || [], summary = rows(0)[0] || {};
-  return { days, generatedAt: new Date().toISOString(), summary: { ...summary, recentVisitors: rows(14)[0]?.visitors || 0, bounced: rows(15)[0]?.bounced || 0, engagedSeconds: rows(16)[0]?.seconds || 0 }, daily: rows(1), pages: rows(2), sources: rows(3), countries: rows(4), cities: rows(5), devices: rows(6), browsers: rows(7), systems: rows(8), campaigns: rows(9), searches: rows(10), campaignTerms: rows(11), outbound: rows(12), recent: rows(13), google: rows(17)[0] ? { importedAt: rows(17)[0].imported_at, label: rows(17)[0].label, rows: JSON.parse(rows(17)[0].rows_json) } : null };
+  return { days, generatedAt: new Date().toISOString(), summary: { ...summary, recentVisitors: rows(14)[0]?.visitors || 0, bounced: rows(15)[0]?.bounced || 0, engagedSeconds: rows(16)[0]?.seconds || 0 }, daily: rows(1), pages: rows(2), sources: rows(3), countries: rows(4), cities: rows(5), devices: rows(6), browsers: rows(7), systems: rows(8), campaigns: rows(9), searches: rows(10), campaignTerms: rows(11), outbound: rows(12), recent: rows(13), google: rows(17)[0] ? { importedAt: rows(17)[0].imported_at, label: rows(17)[0].label, rows: JSON.parse(rows(17)[0].rows_json) } : null, referrals:rows(18), attribution:rows(19)[0] || {total:0,withReferrer:0,unknown:0} };
 }
 export default {
   async fetch(request, env, ctx) {

@@ -114,13 +114,14 @@ fs.writeFileSync('dist/404.html', '<!doctype html><html lang="en"><head><meta ch
 console.log(`Generated ${urls.length} canonical pages, sitemap, robots.txt and 404 page.`);
 
 // Build the private analytics worker and attach the same first-party tracker to every public page.
-const trackerTag = '<script defer src="/_stats/tracker.js"></script>';
+const trackerVersion = require('node:crypto').createHash('sha256').update(fs.readFileSync('analytics-tracker.js')).digest('hex').slice(0,12);
+const trackerTag = '<script defer src="/_stats/tracker.js?v='+trackerVersion+'"></script>';
 function trackDirectory(dir) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
     const file = dir + '/' + entry.name;
     if (entry.isDirectory()) trackDirectory(file);
     else if (entry.name.endsWith('.html')) {
-      let content = fs.readFileSync(file, 'utf8').replaceAll(trackerTag, '');
+      let content = fs.readFileSync(file, 'utf8').replace(/<script\s+defer\s+src="\/_stats\/tracker\.js(?:\?[^"\s]*)?"><\/script>/g, '');
       fs.writeFileSync(file, content.replace('</head>', trackerTag + '</head>'));
     }
   }
