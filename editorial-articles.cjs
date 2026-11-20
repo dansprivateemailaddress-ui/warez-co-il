@@ -15,11 +15,12 @@ const dymo = {name:'DYMO LabelManager 160',asin:'B005X9VZ70',image:'https://cdn1
 const sections=[
 {
  id:'beryl-ax-mobile-workspace',label:'A familiar network away from home',guidePath:'/guides/beryl-ax-mobile-workspace',date:'2026-11-20',
- title:'A familiar Wi-Fi network, wherever work takes you',
- description:'When a travel router earns its place in your work bag: a practical look at the GL.iNet Beryl AX, hotel Wi-Fi and a repeatable mobile workspace.',
+ title:'Four useful pieces for a workspace that travels',
+ description:'Four practical mobile-work picks: a GL.iNet travel router, Anker USB-C hub, Logitech compact keyboard and Samsung portable SSD, with buying checks.',
  intro:[
  'The room has a desk. The desk has a socket. Then comes the ritual: connect the laptop, persuade the tablet to join, and work out why the second device cannot reach the same sign-in page. The meeting starts in nine minutes.',
- 'A travel router earns its space by making that arrival less awkward. Connect it to the available internet connection, then let your devices join the network you already configured. The GL.iNet Beryl AX is worth considering if that small ritual follows you from hotels to temporary offices. For one laptop and an occasional overnight stay, a phone hotspot may already be enough.'
+ 'A travel router earns its space by making that arrival less awkward. Connect it to the available internet connection, then let your devices join the network you already configured. The GL.iNet Beryl AX is worth considering if that small ritual follows you from hotels to temporary offices. For one laptop and an occasional overnight stay, a phone hotspot may already be enough.',
+ 'The rest of the setup deserves the same test: does it remove a recurring problem? These four picks cover a familiar network, the right connections, a compact typing surface and a place for project files. They are individual options, not a bundle you need to buy in full.'
  ],
  contextTitle:'Bring the network setup with you',
  context:[
@@ -31,14 +32,27 @@ const sections=[
  use:'A compact Wi-Fi 6 router for a repeatable network around your travelling work devices.',
  detail:'The Beryl AX supports Wi-Fi repeating, Ethernet internet and USB tethering. It has a 2.5Gbps WAN port, a gigabit LAN port and USB 3.0. These are connection capabilities, not a promise of the speed you will receive. Its OpenVPN and WireGuard support may be useful when your workflow calls for a configured VPN connection; a VPN service or server and the correct settings are still required.',
  check:'Choose GL-MT3000, not the older GL-MT1300 Beryl. Confirm the supplied power adapter and plug, your intended tethering device and the venue’s network policy. This model needs an external internet source; it is not a standalone cellular hotspot.'
- }],
+ },
+ {...hub,
+ use:'A compact connection point for a temporary desk with an HDMI display and USB accessories.',
+ detail:'A borrowed monitor is useful only if the laptop can connect to it. The Anker 332 adds HDMI and USB data ports through one USB-C connection, which can simplify the arrival at a shared desk. Its HDMI output supports up to 4K at 30Hz. That may suit documents and email; choose a different connection if a smoother high-refresh display is central to your work. This hub has no Ethernet socket, so it does not replace the travel router’s wired network connections.',
+ check:'The laptop’s USB-C port must support video output for HDMI. The power-input port needs a separate compatible charger; this hub is not a power supply. Check your display’s refresh-rate needs and the power available to connected devices.'},
+ {...keyboard,
+ use:'A separate Bluetooth keyboard for writing at a small desk or moving between a compatible laptop and tablet.',
+ detail:'The Pebble Keys 2 K380s makes sense when the laptop is raised or pushed back to make room for paperwork. Its compact layout leaves more of a narrow hotel desk free. It can switch between up to three paired Bluetooth devices, so a tablet can join the routine without another keyboard. That convenience matters most if you actually write on both devices. If most of the trip involves quick email replies, the laptop keyboard may be the lighter choice.',
+ check:'Confirm Bluetooth and operating-system compatibility, and choose the correct printed key layout. There is no separate number pad. Hebrew input on the device does not guarantee Hebrew legends on the selected keyboard.'},
+ {...t7,
+ use:'Portable working storage for the project assets and exports you need away from your usual computer.',
+ detail:'A large project folder can be awkward to download again from a slow connection. Keeping the current assets on a Samsung T7 Shield gives those files a defined place in the travel kit. The selected model is the black 1TB version. Open a representative project from the drive before leaving, including linked images and other dependencies. Moving the only copy onto the SSD does not create a backup; keep another independent copy and test that you can restore it.',
+ check:'Match the capacity and file system to your devices. Transfer performance depends on the port, cable and workload. If using the SSD through a hub, confirm the hub’s data speed and available power; keep the right cable with the drive.'}
+ ],
  closingTitle:'Rehearse the arrival before the trip',
  closing:[
  'Set it up at home while you have time. Change the administrator password, update the firmware through the manufacturer’s interface, and give the local Wi-Fi a strong password. Connect the devices you actually carry. Then disconnect the upstream connection and practise restoring it. A familiar failure is easier to diagnose than a new one during a client call.',
  'Captive portals deserve their own rehearsal. Follow GL.iNet’s current instructions when a venue requires browser sign-in, and verify that normal browsing works before adding a VPN connection. Keep the phone’s own hotspot available as a fallback. A second way online matters more than another advertised speed figure.',
  'For a two-day trip with one device, leave the extra box at home if it solves nothing. For someone who repeatedly sets up several devices in unfamiliar places, the attraction is easier to see: fewer settings to remember, and a workspace that feels a little more settled before the first call.'
  ],
- sources:[{label:'GL.iNet Beryl AX product specifications',url:'https://www.gl-inet.com/products/gl-mt3000'},{label:'GL-MT3000 setup and connection guide',url:'https://docs.gl-inet.com/router/en/4/user_guide/gl-mt3000/'},{label:'GL.iNet captive-portal guide',url:'https://docs.gl-inet.com/router/en/4/tutorials/connect_to_a_hotspot_with_captive_portal/'}],
+ sources:[{label:'Anker 332 hub specifications',url:hub.source},{label:'Logitech Pebble Keys 2 specifications',url:keyboard.source},{label:'Samsung T7 Shield specifications',url:t7.source},{label:'GL.iNet Beryl AX product specifications',url:'https://www.gl-inet.com/products/gl-mt3000'},{label:'GL-MT3000 setup and connection guide',url:'https://docs.gl-inet.com/router/en/4/user_guide/gl-mt3000/'},{label:'GL.iNet captive-portal guide',url:'https://docs.gl-inet.com/router/en/4/tutorials/connect_to_a_hotspot_with_captive_portal/'}],
  related:'/guides/',relatedLabel:'Explore the Field Notes index for more mobile-work ideas'
 },
 {
